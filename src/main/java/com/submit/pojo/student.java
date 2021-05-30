@@ -17,7 +17,7 @@ public class student extends BaseRowModel implements Serializable {
 
     @ExcelProperty(index = 3)
     private String password;
-
+    private String pingshi;
     public String getStudentno() {
         return studentno;
     }
@@ -52,5 +52,12 @@ public class student extends BaseRowModel implements Serializable {
     public String toString()
     {
         return "studentno:"+studentno+" name:"+name+" pinyin:"+pinyin+" password:"+password;
+    }
+    public String getPingShi() {
+        return pingshi;
+    }
+
+    public void setPingshi(String pingshi) {
+        this.pingshi = pingshi == null ? null : pingshi.trim();
     }
 }
