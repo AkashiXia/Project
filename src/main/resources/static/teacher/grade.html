@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+
+    <title>学生信息管理</title>
+    <link rel="stylesheet" href="../layui/css/layui.css">
+    <link rel="stylesheet" href="../layui/css/bootstrap.css">
+    <link rel="stylesheet" href="../layui/css/personal.css">
+</head>
+<body>
+<div class="layui-form-item">
+    <div class="layui-inline">
+        <label class="layui-form-label">课程：</label>
+        <div class="layui-input-block">
+            <select name="lesson"  id="lesson" lay-filter="lessonname">
+                <option  value="" ></option>
+            </select>
+        </div>
+    </div>
+</div>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+    <legend>权重分配(权重为0-1，总和为1)</legend>
+</fieldset>
+<div class="larry-personal">
+    <div class="layui-form "  id="addstudent">
+
+
+        <p  id="hint"  style="color: red" align="center"></p>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">平时</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="stuno" value="" name="studentno"   class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">最终</label>
+                <div class="layui-input-inline">
+                    <input id="stuname" type="text" name="name" value=""  autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+
+                </div>
+            </div>
+        </div>
+    </>
+
+    <div class="larry-personal-body clearfix">
+        <!--            UI填充造成视觉的效果！-->
+    </div>
+    <div class="larry-personal-body clearfix">
+        <table class="layui-hide"  id="demo" lay-filter="demo"></table>
+    </div>
+
+</div>
+</body>
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckData">右侧进行筛选导出</button>
+    </div>
+</script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/javascript" src="../layui/layui.js"></script>
+<script type="text/javascript" src="../layui/jquery-2.2.1.min.js"></script>
+<script>
+    function showstudent() {
+        var studentno=$("#stuno").val();
+        var name=$("#stuname").val();
+        console.log(studentno);
+        layui.use('table', function(){
+            var table = layui.table;//高版本建议把括号去掉，有的低版本，需要加()
+            table.render({
+                elem: '#demo'
+                ,url: 'getallstudent2' //数据接口
+                ,where:{'studentid':studentno,'name':name}
+                ,page: false //开启分页
+                ,toolbar: '#toolbarDemo'
+                ,title:'学生信息'
+                ,cols: [[ //表头
+                    {field: 'studentno', title: '学号',  sort: true}
+                    ,{field: 'name', title: '姓名',edit:'text'}
+                    ,{field:'pingshi',title:'平时',edit:'text'}
+                    ,{field: 'zuizhong', title: '最终',edit:'text'}
+                    ,//{fixed: 'right', title:'操作', toolbar: '#barDemo'}
+                ]]
+            });
+            //头工具栏事件
+
+            //监听单元格编辑
+            table.on('edit(demo)', function(obj){
+                var value = obj.value //得到修改后的值
+                    ,data = obj.data //得到所在行所有键值
+                    ,fieldva = obj.field; //得到字段
+                $.ajax( {
+                    url:"updatestudent",
+                    data:{
+                        'studentid':data.studentno,
+                        'name':data.name,
+                        'pingshi':data.pinyin,
+                        'zuizhong':data.password
+                    },
+
+                    method:'POST',
+                    success:function (msg) {
+                        layer.msg(msg)
+                    },
+                    error:function (msg) {
+                        layer.msg(msg)
+                    }
+
+                })
+            });
+            table.on('tool(demo)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'del'){
+                    layer.confirm('真的删除行么', function(index){
+                        $.ajax({
+                            url:'deletestudent',
+                            data: {
+                                'studentid':data.studentno
+                            },
+                            method:'POST',
+                            traditional: true,
+                            success:function (msg) {
+                                layer.msg(msg);
+                                obj.del();
+                            },
+                            error:function (msg) {
+                                layer.msg(msg)
+                            }
+
+
+
+                        })
+                        layer.close(index);
+                    });
+                } else if(obj.event === 'edit'){
+                    layer.msg(JSON.stringify("您可直接编辑编号和备注"))
+                }
+            });
+        });
+    }
+    showstudent();
+
+        layui.use('laydate', function(){
+            var laydate = layui.laydate;
+
+            //常规用法
+            laydate.render({
+                elem: '#test1',
+                trigger: 'click' //采用click弹出
+            });
+        });
+    layui.use(['form','upload','layedit','table'],function(){
+        var form = layui.form
+            ,layer = layui.layer
+            ,layedit = layui.layedit
+            ,table=layui.table;
+        form.on('submit(formDemo)', function(data){
+            //执行实例
+            layer.confirm('真的添加？', function(index){
+                $.post("addjob",data.field,function(res){
+                    layer.msg(JSON.stringify(res));
+                    $("#hint").html(res);
+                });
+                layer.close(index);
+                //向服务端发送删除指令
+            });
+
+            return false;
+        });
+
+    });
+
+    function renderForm(){
+        layui.use('form', function(){
+            var form = layui.form;//高版本建议把括号去掉，有的低版本，需要加()
+            form.render();
+        });
+    }
+
+
+    function filllesson(json) {
+        $("#lesson").empty();
+        for (var i=0;i<json.length;i++)
+        {
+            $("#lesson").append(" <option value=\""+json[i].id+"\">"+json[i].coursename+"</option>");
+        }
+        renderForm();
+    }
+    function getteachclass() {
+        // $("#lessonname").empty();
+        var id = $("#lesson").val();
+        $.ajax({
+            url: "getteacherclassthisterm",
+            type: "GET",
+            traditional: true,//这里设置为true
+            success: function (data) {
+                //do sth...
+                filllesson(data);
+            }
+        });
+    }
+    getteachclass();
+
+
+
+</script>
+</html>
